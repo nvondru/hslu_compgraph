@@ -24,6 +24,8 @@ var rectangleObject = {
   colorBuffer: -1,
 };
 
+let shapes = [];
+
 /**
  * Startup function to be called when the body is loaded
  */
@@ -45,19 +47,31 @@ function initGL() {
     "VertexShader.glsl",
     "FragmentShader.glsl"
   );
-  setUpAttributesAndUniforms();
   setUpBuffers();
 
   // set the clear color here
   gl.clearColor(0.9, 0.9, 0.9, 1);
-
-  // add more necessary commands here
 }
 
-/**
- * Setup all the attribute and uniform variables
- */
-function setUpAttributesAndUniforms() {}
+function initShapeWithColor(vertices, colors, name) {
+  let shape = {};
+  shape.name = name;
+  shape.positionBuffer = bufferDataToAttribute(
+    new Float32Array(vertices),
+    2,
+    "vertexPosition",
+    gl.FLOAT
+  );
+
+  shape.colorBuffer = bufferDataToAttribute(
+    new Float32Array(colors),
+    4,
+    "vertexColor",
+    gl.FLOAT
+  );
+
+  shapes.push(shape);
+}
 
 /**
  * Setup the buffers to use. If more objects are needed this should be split in a file per object.
@@ -65,44 +79,51 @@ function setUpAttributesAndUniforms() {}
 function setUpBuffers() {
   "use strict";
 
-  // add code here to setup the buffers for drawing an object
-  //    ----------------------- POSITION --------------------------------
-
-  var vertices = [-1, 1, 0, 1, -1, 0, 0, 0];
-
-  rectangleObject.buffer = bufferDataToAttribute(
-    new Float32Array(vertices),
-    2,
-    "vertexPosition",
-    gl.FLOAT
+  initShapeWithColor(
+    [-1, 1, 0, 1, -1, 0, 0, 0],
+    [
+      1.0,
+      1.0,
+      1.0,
+      1.0, // white
+      1.0,
+      0.0,
+      0.0,
+      1.0, // red
+      0.0,
+      1.0,
+      0.0,
+      1.0, // green
+      0.0,
+      0.0,
+      1.0,
+      1.0, // blue
+    ],
+    "one"
   );
 
-  //    ----------------------- COLOR --------------------------------
-  const colors = [
-    1.0,
-    1.0,
-    1.0,
-    1.0, // white
-    1.0,
-    0.0,
-    0.0,
-    1.0, // red
-    0.0,
-    1.0,
-    0.0,
-    1.0, // green
-    0.0,
-    0.0,
-    1.0,
-    1.0, // blue
-  ];
-
-  rectangleObject.colorbuffer = bufferDataToAttribute(
-    new Float32Array(colors),
-    4,
-    "vertexColor",
-    gl.FLOAT
-  );
+  //   initShapeWithColor(
+  //     [0, 1, 1, 1, 0, 0, 1, 0],
+  //     [
+  //       1.0,
+  //       1.0,
+  //       1.0,
+  //       1.0, // white
+  //       1.0,
+  //       0.0,
+  //       0.0,
+  //       1.0, // red
+  //       0.0,
+  //       1.0,
+  //       0.0,
+  //       1.0, // green
+  //       0.0,
+  //       0.0,
+  //       1.0,
+  //       1.0, // blue
+  //     ],
+  //     "two"
+  //   );
 }
 
 /**
