@@ -25,6 +25,8 @@ var rectangleObject = {
   buffer: -1,
 };
 
+let drawableObjects = [];
+
 /**
  * Startup function to be called when the body is loaded
  */
@@ -100,10 +102,9 @@ function draw() {
   ]);
   gl.uniformMatrix3fv(ctx.uProjectionMatId, false, projectionMat);
 
-  drawMiddleLine();
-  drawShape(game.paddleLeft);
-  drawShape(game.paddleRight);
-  drawShape(game.ball);
+  drawableObjects.forEach((object) => {
+    drawShape(object);
+  });
 }
 
 function drawSquare() {
@@ -115,25 +116,14 @@ function drawSquare() {
   gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
 }
 
-function drawMiddleLine() {
-  var modelMat = mat3.create();
-
-  mat3.scale(modelMat, modelMat, [2, gl.drawingBufferHeight]);
-  gl.uniformMatrix3fv(ctx.uModelMatId, false, modelMat);
-  drawSquare();
-}
-
 function drawShape(shape) {
   let modelMat = mat3.create();
 
-  let modelMat_scale = mat3.create();
-  mat3.fromScaling(modelMat_scale, [shape.scale.x, shape.scale.y]);
-
   let modelMat_translate = mat3.create();
-  mat3.fromTranslation(modelMat_translate, [
-    shape.translate.x,
-    shape.translate.y,
-  ]);
+  mat3.fromTranslation(modelMat_translate, [shape.x, shape.y]);
+
+  let modelMat_scale = mat3.create();
+  mat3.fromScaling(modelMat_scale, [shape.width, shape.height]);
 
   mat3.mul(modelMat, modelMat_translate, modelMat_scale);
   gl.uniformMatrix3fv(ctx.uModelMatId, false, modelMat);
@@ -151,49 +141,30 @@ function drawAnimated(timeStamp) {
   } else {
     var deltaTime = (timeStamp - lastTimeStamp) / 1000;
     lastTimeStamp = timeStamp;
-    //TODO : move things
+
     if (isDown(controller.UP)) {
-      game.paddleRight.translate.y += controller.speed * deltaTime;
+      game.paddleRight.moveBy({ x: 0, y: 250 }, deltaTime);
     }
     if (isDown(controller.DOWN)) {
-      game.paddleRight.translate.y -= controller.speed * deltaTime;
+      game.paddleRight.moveBy({ x: 0, y: -250 }, deltaTime);
     }
     if (isDown(controller.W)) {
-      game.paddleLeft.translate.y += controller.speed * deltaTime;
+      game.paddleLeft.moveBy({ x: 0, y: 250 }, deltaTime);
     }
     if (isDown(controller.S)) {
-      game.paddleLeft.translate.y -= controller.speed * deltaTime;
+      game.paddleLeft.moveBy({ x: 0, y: -250 }, deltaTime);
     }
 
-    if (hitsLeftPaddle() || hitsRightPaddle()) {
+    if (
+      game.ball.collidesWith(game.paddleRight) ||
+      game.ball.collidesWith(game.paddleLeft)
+    ) {
       game.ball.speed.x *= -1;
     }
-
-    game.ball.translate.x += game.ball.speed.x * deltaTime;
-    game.ball.translate.y += game.ball.speed.y * deltaTime;
+    game.ball.moveBy(game.ball.speed, deltaTime);
   }
   draw();
   window.requestAnimationFrame(drawAnimated);
-}
-
-function hitsRightPaddle() {
-  return (
-    game.ball.translate.x >= game.paddleRight.translate.x &&
-    game.ball.translate.y >=
-      game.paddleRight.translate.y - game.paddleRight.scale.y / 2 &&
-    game.ball.translate.y <=
-      game.paddleRight.translate.y + game.paddleRight.scale.y / 2
-  );
-}
-
-function hitsLeftPaddle() {
-  return (
-    game.ball.translate.x <= game.paddleLeft.translate.x &&
-    game.ball.translate.y >=
-      game.paddleLeft.translate.y - game.paddleLeft.scale.y / 2 &&
-    game.ball.translate.y <=
-      game.paddleLeft.translate.y + game.paddleLeft.scale.y / 2
-  );
 }
 
 // Key Handling
