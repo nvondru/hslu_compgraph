@@ -143,24 +143,48 @@ function drawAnimated(timeStamp) {
     lastTimeStamp = timeStamp;
 
     if (isDown(controller.UP)) {
-      game.paddleRight.moveBy({ x: 0, y: 250 }, deltaTime);
+      game.paddleRight.moveBy({ x: 0, y: 450 }, deltaTime);
     }
     if (isDown(controller.DOWN)) {
-      game.paddleRight.moveBy({ x: 0, y: -250 }, deltaTime);
+      game.paddleRight.moveBy({ x: 0, y: -450 }, deltaTime);
     }
     if (isDown(controller.W)) {
-      game.paddleLeft.moveBy({ x: 0, y: 250 }, deltaTime);
+      game.paddleLeft.moveBy({ x: 0, y: 450 }, deltaTime);
     }
     if (isDown(controller.S)) {
-      game.paddleLeft.moveBy({ x: 0, y: -250 }, deltaTime);
+      game.paddleLeft.moveBy({ x: 0, y: -450 }, deltaTime);
     }
 
-    if (
-      game.ball.collidesWith(game.paddleRight) ||
-      game.ball.collidesWith(game.paddleLeft)
-    ) {
-      game.ball.speed.x *= -1;
+    // ball bounces off paddles
+    if (game.ball.collidesWith(game.paddleRight)) {
+      game.paddleRight.handleCollision();
     }
+
+    if (game.ball.collidesWith(game.paddleLeft)) {
+      game.paddleLeft.handleCollision();
+    }
+
+    // ball bounces of top and bottom
+    if (
+      game.ball.collidesWith(game.upperBorder) ||
+      game.ball.collidesWith(game.lowerBorder)
+    ) {
+      game.ball.speed.y *= -1;
+    }
+
+    // ball hits wall from player 1
+    if (game.ball.collidesWith(game.leftBorder)) {
+      nextRound();
+      game.player2.increasePoints();
+    }
+
+    // ball hits wall from player 2
+    if (game.ball.collidesWith(game.rightBorder)) {
+      nextRound();
+
+      game.player1.increasePoints();
+    }
+
     game.ball.moveBy(game.ball.speed, deltaTime);
   }
   draw();

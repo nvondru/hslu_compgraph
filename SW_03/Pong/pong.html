@@ -9,9 +9,16 @@
     <script type="text/javascript" src="CollisionDetection.js"></script>
     <script type="text/javascript" src="GameLogic.js"></script>
     <script type="text/javascript" src="Pong.js"></script>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <h1>Pong</h1>
-    <canvas id="myCanvas" width="800" height="600"></canvas>
+    <div id="game">
+      <div class="scoreBoard">
+        <div class="score" id="score--player1">0</div>
+        <h1 id="pong">Pong</h1>
+        <div class="score" id="score--player2">0</div>
+      </div>
+      <canvas id="myCanvas" width="800" height="600"></canvas>
+    </div>
   </body>
 </html>

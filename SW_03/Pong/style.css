@@ -1,0 +1,40 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
+* {
+  font-family: "Press Start 2P", cursive;
+}
+
+body,
+html {
+  background-color: #191919;
+  padding: 0;
+  margin: 0;
+}
+#game {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 30px;
+  background-color: lightblue;
+}
+
+h1 {
+  position: relative;
+}
+
+.scoreBoard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.score {
+  font-size: 30px;
+}
+
+#pong {
+  cursor: pointer;
+}
