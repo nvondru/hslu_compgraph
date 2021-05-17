@@ -1,0 +1,206 @@
+//
+// DI Computer Graphics
+//
+// WebGL Exercises
+//
+
+// Register function to call after document has loaded
+window.onload = startup;
+
+// the gl object is saved globally
+/** @type {WebGLRenderingContext} */
+var gl;
+let solidCube;
+let startPos = undefined;
+let camPos = {
+  x: 0,
+  y: 0,
+  z: 5,
+};
+
+// we keep all local parameters for the program in a single object
+var ctx = {
+  shaderProgram: -1,
+  aVertexPositionId: -1,
+  aVertexColorId: -1,
+  aVertexTextureCoordId: -1,
+  aVertexNormalId: -1,
+  uProjectionMatId: -1,
+  uViewMatId: -1,
+  uModelMatId: -1,
+};
+
+/**
+ * Startup function to be called when the body is loaded
+ */
+function startup() {
+  "use strict";
+  var canvas = document.getElementById("myCanvas");
+
+  // camera - mouse interaction
+  document.body.addEventListener("wheel", (event) => {
+    camPos.z += event.deltaY / 5000;
+  });
+  document.body.addEventListener("mousedown", (event) => {
+    startPos = { x: event.x, y: event.y };
+  });
+  document.body.addEventListener("mousemove", (event) => {
+    if (startPos != undefined) {
+      camPos.x -= (event.x - startPos.x) / 100;
+      camPos.y += (event.y - startPos.y) / 100;
+      startPos.x = event.x;
+      startPos.y = event.y;
+    }
+  });
+  document.body.addEventListener("mouseup", (event) => {
+    startPos = undefined;
+  });
+
+  gl = createGLContext(canvas);
+  initGL();
+  window.requestAnimationFrame(drawAnimated);
+}
+
+/**
+ * InitGL should contain the functionality that needs to be executed only once
+ */
+function initGL() {
+  "use strict";
+  ctx.shaderProgram = loadAndCompileShaders(
+    gl,
+    "VertexShader.glsl",
+    "FragmentShader.glsl"
+  );
+  gl.frontFace(gl.CCW); // defines how the front face is drawn
+  gl.cullFace(gl.BACK); // defines which face should be culled
+  gl.enable(gl.CULL_FACE); // enables culling
+  setUpAttributesAndUniforms();
+  setUpBuffers();
+
+  gl.clearColor(0.1, 0.1, 0.1, 1);
+}
+
+/**
+ * Setup all the attribute and uniform variables
+ */
+function setUpAttributesAndUniforms() {
+  "use strict";
+  ctx.aVertexPositionId = gl.getAttribLocation(
+    ctx.shaderProgram,
+    "aVertexPosition"
+  );
+  ctx.aVertexColorId = gl.getAttribLocation(ctx.shaderProgram, "aVertexColor");
+  ctx.aVertexTextureCoordId = gl.getAttribLocation(
+    ctx.shaderProgram,
+    "aVertexTextureCoord"
+  );
+  ctx.aVertexNormalId = gl.getAttribLocation(
+    ctx.shaderProgram,
+    "aVertexNormal"
+  );
+
+  ctx.uProjectionMatId = gl.getUniformLocation(
+    ctx.shaderProgram,
+    "uProjectionMat"
+  );
+  ctx.uViewMatId = gl.getUniformLocation(ctx.shaderProgram, "uViewMat");
+  ctx.uModelMatId = gl.getUniformLocation(ctx.shaderProgram, "uModelMat");
+}
+
+/**
+ * Setup the buffers to use. If more objects are needed this should be split in a file per object.
+ */
+function setUpBuffers() {
+  "use strict";
+  solidCube = SolidCube(
+    gl,
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+    [1, 1, 0],
+    [1, 1, 1],
+    [0, 0, 0]
+  );
+}
+
+/**
+ * Draw the scene.
+ */
+function draw() {
+  "use strict";
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  // set camera projection
+  let projectionMatrix = mat4.create();
+  let aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight;
+  mat4.perspective(
+    projectionMatrix,
+    glMatrix.toRadian(30),
+    aspectRatio,
+    0.01,
+    100
+  );
+
+  // set camera position and orientation
+  let viewMatrix = mat4.create();
+  mat4.lookAt(viewMatrix, [camPos.x, camPos.y, camPos.z], [0, 0, 0], [0, 1, 0]);
+
+  gl.uniformMatrix4fv(ctx.uViewMatId, false, viewMatrix);
+  gl.uniformMatrix4fv(ctx.uProjectionMatId, false, projectionMatrix);
+
+  //TODO : draw more stuff
+  // Model matrix
+  let modelMat = mat4.create();
+
+  let modelMat_translate = mat4.create();
+  mat4.fromTranslation(modelMat_translate, [
+    solidCube.position.x,
+    solidCube.position.y,
+    solidCube.position.z,
+  ]);
+
+  let modelMat_scale = mat4.create();
+  mat4.fromScaling(modelMat_scale, [
+    solidCube.width,
+    solidCube.height,
+    solidCube.depth,
+  ]);
+
+  let modelMat_temp = mat4.create();
+  mat4.mul(modelMat_temp, modelMat_translate, modelMat_scale);
+
+  let modelMat_rotation = mat4.create();
+  mat4.fromRotation(modelMat_rotation, glMatrix.toRadian(solidCube.angle), [
+    solidCube.rotation.x,
+    solidCube.rotation.y,
+    solidCube.rotation.z,
+  ]);
+  mat4.mul(modelMat, modelMat_rotation, modelMat_temp);
+  gl.uniformMatrix4fv(ctx.uModelMatId, false, modelMat);
+
+  solidCube.draw(
+    gl,
+    ctx.aVertexPositionId,
+    ctx.aVertexColorId,
+    ctx.aVertexTextureCoordId,
+    ctx.aVertexNormalId
+  );
+}
+
+// animation
+var first = true;
+var lastTimeStamp = 0;
+
+function drawAnimated(timeStamp) {
+  if (first) {
+    lastTimeStamp = timeStamp;
+    first = false;
+  } else {
+    var timeElapsed = timeStamp - lastTimeStamp;
+    lastTimeStamp = timeStamp;
+
+    //TODO : move things
+  }
+  draw();
+  window.requestAnimationFrame(drawAnimated);
+}

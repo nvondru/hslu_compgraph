@@ -21,11 +21,13 @@ let camPos = {
   z: 2,
 };
 
+let modeSelect;
+
 // we keep all local parameters for the program in a single object
 var ctx = {
   shaderProgram: -1,
   aVertexPositionId: -1,
-  uColorId: -1,
+  vColorId: -1,
   uProjectionMatId: -1,
   uViewMatId: -1,
   uModelMatId: -1,
@@ -35,6 +37,7 @@ var ctx = {
 var rectangleObject = {
   buffer: -1,
   indicesBuffer: -1,
+  colorBuffer: -1,
 };
 
 /**
@@ -43,6 +46,10 @@ var rectangleObject = {
 function startup() {
   "use strict";
   var canvas = document.getElementById("myCanvas");
+  modeSelect = document.getElementById("mode");
+  modeSelect.addEventListener("change", (event) => {
+    console.log(event.target.value);
+  });
 
   // camera - mouse interaction
   document.body.addEventListener("wheel", (event) => {
@@ -80,6 +87,9 @@ function initGL() {
     "VertexShader.glsl",
     "FragmentShader.glsl"
   );
+  gl.frontFace(gl.CCW); // defines how the front face is drawn
+  gl.cullFace(gl.FRONT); // defines which face should be culled
+  gl.enable(gl.CULL_FACE); // enables culling
   setUpAttributesAndUniforms();
   setUpBuffers();
 
@@ -95,7 +105,7 @@ function setUpAttributesAndUniforms() {
     ctx.shaderProgram,
     "aVertexPosition"
   );
-  ctx.uColorId = gl.getUniformLocation(ctx.shaderProgram, "uColor");
+  ctx.vColorId = gl.getAttribLocation(ctx.shaderProgram, "aVertexColor");
   ctx.uProjectionMatId = gl.getUniformLocation(
     ctx.shaderProgram,
     "uProjectionMat"
@@ -111,33 +121,51 @@ function setUpBuffers() {
   "use strict";
   // position
   rectangleObject.buffer = gl.createBuffer();
-  var vertices = square.vertices;
   gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.buffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(square.vertices),
+    gl.STATIC_DRAW
+  );
+
+  // buffer for colors
+  rectangleObject.colorBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.colorBuffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(square.colors),
+    gl.STATIC_DRAW
+  );
 
   // buffer for indices
   // prettier-ignore
-  indices = [
-    0, 1,
-    1, 2,
-    2, 3,
-    3, 0,
-    4, 5,
-    5, 6,
-    6, 7,
-    7, 4,
-    0, 4,
-    1, 5,
-    2, 6,
-    3, 7,
-  ];
-  rectangleObject.indicesBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, rectangleObject.indicesBuffer);
-  gl.bufferData(
-    gl.ELEMENT_ARRAY_BUFFER,
-    new Uint16Array(indices),
-    gl.STATIC_DRAW
-  );
+  // indices = [
+  //   // bottom
+  //   0, 3, 1,
+  //   1, 3, 2,
+  //   // top
+  //   4, 5, 6,
+  //   6, 7, 4,
+  //   // front
+  //   0, 1, 5,
+  //   5, 4, 0,
+  //   // back
+  //   2, 3, 7,
+  //   7, 6, 2,
+  //   // left
+  //   3, 0, 4,
+  //   4, 7, 3,
+  //   // right
+  //   1, 2, 5,
+  //   5, 2, 6
+  // ];
+  // rectangleObject.indicesBuffer = gl.createBuffer();
+  // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, rectangleObject.indicesBuffer);
+  // gl.bufferData(
+  //   gl.ELEMENT_ARRAY_BUFFER,
+  //   new Uint16Array(indices),
+  //   gl.STATIC_DRAW
+  // );
 }
 
 /**
@@ -148,7 +176,7 @@ function draw() {
   gl.clear(gl.COLOR_BUFFER_BIT);
   // set camera projection
   let projectionMatrix = mat4.create();
-  setView(projectionMatrix, 1);
+  setView(projectionMatrix, Number(modeSelect.value));
 
   // set camera position and orientation
   let viewMatrix = mat4.create();
@@ -163,9 +191,10 @@ function draw() {
 
 function setView(pMatrix, mode) {
   let aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight;
+  let sizeMultiplier = 1000;
 
   switch (mode) {
-    case 1:
+    case 0:
       mat4.perspective(pMatrix, glMatrix.toRadian(30), aspectRatio, 0.01, 100);
       camPos = {
         x: 0,
@@ -174,7 +203,7 @@ function setView(pMatrix, mode) {
       };
       break;
 
-    case 2:
+    case 1:
       mat4.perspective(pMatrix, glMatrix.toRadian(50), aspectRatio, 0.01, 100);
       camPos = {
         x: 0,
@@ -183,7 +212,7 @@ function setView(pMatrix, mode) {
       };
       break;
 
-    case 3:
+    case 2:
       mat4.perspective(pMatrix, glMatrix.toRadian(40), aspectRatio, 0.01, 100);
       camPos = {
         x: 2,
@@ -192,8 +221,25 @@ function setView(pMatrix, mode) {
       };
       break;
 
-    case 4:
+    case 3:
       mat4.perspective(pMatrix, glMatrix.toRadian(50), aspectRatio, 0.01, 100);
+      camPos = {
+        x: -1,
+        y: 0,
+        z: 2,
+      };
+      break;
+
+    case 4:
+      mat4.ortho(
+        pMatrix,
+        (-2 / gl.drawingBufferWidth) * sizeMultiplier,
+        (2 / gl.drawingBufferWidth) * sizeMultiplier,
+        (-1 / gl.drawingBufferHeight) * sizeMultiplier,
+        (1 / gl.drawingBufferHeight) * sizeMultiplier,
+        0.01,
+        100
+      );
       camPos = {
         x: -1,
         y: 0,
@@ -202,40 +248,28 @@ function setView(pMatrix, mode) {
       break;
 
     case 5:
-      mat4.perspective(pMatrix, glMatrix.toRadian(50), aspectRatio, 0.01, 100);
-      camPos = {
-        x: -1,
-        y: 0,
-        z: 2,
-      };
-      break;
-
-    case 6:
-      let sizeMultiplier = 1000;
       mat4.ortho(
         pMatrix,
         (-2 / gl.drawingBufferWidth) * sizeMultiplier,
         (2 / gl.drawingBufferWidth) * sizeMultiplier,
-        (-2 / gl.drawingBufferHeight) * sizeMultiplier,
-        (2 / gl.drawingBufferHeight) * sizeMultiplier,
+        (-1 / gl.drawingBufferHeight) * sizeMultiplier,
+        (1 / gl.drawingBufferHeight) * sizeMultiplier,
         0.01,
         100
       );
       camPos = {
         x: -1,
-        y: 1,
+        y: 0.5,
         z: 2,
       };
       break;
 
     default:
-      mat4.perspective(pMatrix, glMatrix.toRadian(100), aspectRatio, 0.01, 100);
+      mat4.perspective(pMatrix, glMatrix.toRadian(40), aspectRatio, 0.01, 100);
 
       break;
   }
 }
-
-function setViewMatrix(matrix) {}
 
 function drawSquare(square) {
   // Model matrix
@@ -263,16 +297,23 @@ function drawSquare(square) {
   mat4.mul(modelMat, modelMat_rotation, modelMat_temp);
 
   // connect to webGL
+  // position
   gl.uniformMatrix4fv(ctx.uModelMatId, false, modelMat);
   gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.buffer);
   gl.vertexAttribPointer(ctx.aVertexPositionId, 3, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(ctx.aVertexPositionId);
-  gl.uniform4f(ctx.uColorId, 1, 1, 1, 1);
+
+  // color
+  gl.bindBuffer(gl.ARRAY_BUFFER, rectangleObject.colorBuffer);
+
+  gl.vertexAttribPointer(ctx.vColorId, 4, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(ctx.vColorId);
 
   // indices
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, rectangleObject.indicesBuffer);
+  // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, rectangleObject.indicesBuffer);
 
-  gl.drawElements(gl.LINES, indices.length, gl.UNSIGNED_SHORT, 0);
+  // gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+  gl.drawArrays(gl.TRIANGLES, 0, square.vertices.length);
 }
 
 // animation
@@ -291,7 +332,7 @@ function drawAnimated(timeStamp) {
     square.rotation.x = 0;
     square.rotation.y = 1;
     square.rotation.z = 0;
-    // square.angle += (20 * timeElapsed) / 1000;
+    square.angle += (20 * timeElapsed) / 1000;
   }
   draw();
   window.requestAnimationFrame(drawAnimated);
