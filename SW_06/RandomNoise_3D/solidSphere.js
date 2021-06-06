@@ -76,7 +76,13 @@ function SolidSphere(gl, latitudeBands, longitudeBands, color) {
     return indices;
   }
 
-  function draw(gl, aVertexPositionId, aVertexColorId, aVertexNormalId) {
+  function draw(
+    gl,
+    aVertexPositionId,
+    aVertexColorId,
+    aVertexNormalId,
+    aVertexTextureCoordId
+  ) {
     "use strict";
 
     // position
@@ -98,6 +104,11 @@ function SolidSphere(gl, latitudeBands, longitudeBands, color) {
     gl.vertexAttribPointer(aVertexNormalId, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(aVertexNormalId);
 
+    // // texture
+    // gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferTextures);
+    // gl.vertexAttribPointer(aVertexTextureCoordId, 2, gl.FLOAT, false, 0, 0);
+    // gl.enableVertexAttribArray(aVertexTextureCoordId);
+
     // elements
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphere.bufferIndices);
     gl.drawElements(
@@ -109,6 +120,7 @@ function SolidSphere(gl, latitudeBands, longitudeBands, color) {
 
     // disable attributes
     gl.disableVertexAttribArray(aVertexPositionId);
+    gl.disableVertexAttribArray(aVertexTextureCoordId);
     gl.disableVertexAttribArray(aVertexNormalId);
   }
 

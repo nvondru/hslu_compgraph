@@ -82,7 +82,7 @@ function initGL() {
   gl.uniform1i(ctx.uEnableTextureId, 0);
   gl.uniform1i(ctx.uEnableLightingId, 1);
 
-  gl.uniform3fv(ctx.uLightPositionId, [5, 5, -5]);
+  gl.uniform3fv(ctx.uLightPositionId, [50, 50, 50]);
   gl.uniform3fv(ctx.uLightColorId, [0, 1, 0]);
 
   gl.clearColor(0.1, 0.1, 0.1, 1);
@@ -146,7 +146,7 @@ function setUpBuffers() {
     [0, 0, 0]
   );
 
-  solidSphere = SolidSphere(gl, 100, 100, [1, 0, 0]);
+  solidSphere = SolidSphere(gl, 5, 5, [1, 0, 0]);
 }
 
 /**
@@ -189,8 +189,7 @@ function draw() {
     gl,
     ctx.aVertexPositionId,
     ctx.aVertexColorId,
-    ctx.aVertexNormalId,
-    ctx.aVertexTextureCoordId
+    ctx.aVertexNormalId
   );
 }
 
@@ -251,8 +250,6 @@ function setModelViewTransformations(objectModel, viewMatrix) {
   gl.uniformMatrix4fv(ctx.uModelMatId, false, modelMat);
   let normalMat = mat3.create();
   // maybe model * view mat instead of just modelmat!
-  let modelViewMat = mat4.create();
-  mat4.mul(modelViewMat, modelMat, viewMatrix);
-  mat3.normalFromMat4(normalMat, modelViewMat);
+  mat3.normalFromMat4(normalMat, modelMat);
   gl.uniformMatrix3fv(ctx.uNormalMatrixId, false, normalMat);
 }

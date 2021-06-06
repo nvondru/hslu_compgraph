@@ -12,8 +12,14 @@ varying vec3 vVertexPositionEye3;
 varying vec2 vTextureCoord;
 
 const float ambientFactor = 0.2;
-const float shinyness = 10.0;
+const float shinyness = 200.0;
 const vec3 specularMaterialColor = vec3(1);
+
+float random (vec2 st) {
+    return fract(sin(dot(st.xy,
+                         vec2(22.9898,78.233)))*
+        43.543123);
+}
 
 void main() {
     vec3 baseColor = vColor;
@@ -43,8 +49,13 @@ void main() {
             specularColor = cosPhi * specularMaterialColor + uLightColor * cosPhi;
         }
 
-        vec3 color = ambientColor + diffuseColor + specularColor;
-        gl_FragColor = vec4(color, 1.0);
+        vec2 st = vTextureCoord.xy * 20.0;       
+        st = floor(st);
+        float rnd = random(st);
+
+        vec3 color = ambientColor + diffuseColor * vec3(rnd) + specularColor ;
+
+        gl_FragColor =  vec4(color, 1.0) ;
     }else{
         gl_FragColor = vec4(baseColor, 1.0);
     }
