@@ -10,6 +10,8 @@ varying vec3 vColor;
 varying vec3 vNormalEye;
 varying vec3 vVertexPositionEye3;
 varying vec2 vTextureCoord;
+varying float vTimeMap;
+varying float vScale;
 
 const float ambientFactor = 0.2;
 const float shinyness = 200.0;
@@ -28,6 +30,9 @@ void main() {
     }
 
     if(uEnableLighting) {
+        vec2 st = vTextureCoord.xy * vTimeMap * 10.0  * vScale;       
+        st = floor(st);
+        float rnd = random(st);
         // ambient lighting
         vec3 ambientColor = ambientFactor * baseColor;
 
@@ -41,7 +46,7 @@ void main() {
         vec3 diffuseColor = diffuseFactor * baseColor;
 
         // specular lighting
-        vec3 specularColor = vec3(0,0,0);
+        vec3 specularColor = vec3(rnd,rnd,0);
         if(diffuseFactor > 0.0) {
             vec3 reflectionDir = normalize(reflect(-lightDirectionEye, normal));
             vec3 eyeDir = normalize(-1.0 * vVertexPositionEye3);
@@ -49,11 +54,10 @@ void main() {
             specularColor = cosPhi * specularMaterialColor + uLightColor * cosPhi;
         }
 
-        vec2 st = vTextureCoord.xy * 20.0;       
-        st = floor(st);
-        float rnd = random(st);
 
-        vec3 color = ambientColor + diffuseColor * vec3(rnd) + specularColor ;
+     
+
+        vec3 color = ambientColor + vec3(vTimeMap, 0, 0)  + diffuseColor * vec3(rnd) + specularColor  + vTimeMap * rnd;
 
         gl_FragColor =  vec4(color, 1.0) ;
     }else{

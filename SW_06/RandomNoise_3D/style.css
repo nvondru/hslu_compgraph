@@ -12,3 +12,24 @@ body {
 canvas {
   display: block;
 }
+
+.hint {
+  animation-name: blup;
+  animation: blup 2s infinite ease-in-out;
+  text-align: center;
+}
+
+@keyframes blup {
+  0% {
+    font-size: 100%;
+    line-height: 100%;
+  }
+  50% {
+    font-size: 200%;
+    line-height: 200%;
+  }
+  100% {
+    font-size: 100%;
+    line-height: 100%;
+  }
+}

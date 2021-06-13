@@ -229,10 +229,11 @@ function SolidCube(
     bufferNormals: defineNormals(gl),
     bufferTextureCoords: defineTextureCoord(gl),
     position: {
-      x: 1,
+      x: 0,
       y: 0,
       z: -10,
     },
+    scaleFactor: 3,
     width: 1,
     height: 1,
     depth: 1,
@@ -281,9 +282,16 @@ function SolidCube(
       gl.disableVertexAttribArray(aVertexNormalId);
     },
     scale(multiplier) {
-      this.width += 0.1 * multiplier;
-      this.height += 0.1 * multiplier;
-      this.depth += 0.1 * multiplier;
+      this.scaleFactor += multiplier;
+    },
+    scaleX(multiplier) {
+      this.width = this.scaleFactor * multiplier;
+    },
+    scaleY(multiplier) {
+      this.height = this.scaleFactor * multiplier;
+    },
+    scaleZ(multiplier) {
+      this.depth = this.scaleFactor * multiplier;
     },
     rotate(xRotation, yRotation) {
       this.angle += xRotation;

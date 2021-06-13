@@ -18,6 +18,7 @@ let camPos = {
   y: 0,
   z: 0,
 };
+let solidCubes = [];
 
 // we keep all local parameters for the program in a single object
 var ctx = {
@@ -40,16 +41,18 @@ function startup() {
 
   // camera - mouse interaction
   document.body.addEventListener("wheel", (event) => {
-    solidCube.scale(event.deltaY / Math.abs(event.deltaY));
-    solidSphere.scale(event.deltaY / Math.abs(event.deltaY));
+    solidCubes.forEach((solidCube) => {
+      solidCube.scale((event.deltaY / Math.abs(event.deltaY)) * 0.1);
+    });
   });
   document.body.addEventListener("mousedown", (event) => {
     startPos = { x: event.x, y: event.y };
   });
   document.body.addEventListener("mousemove", (event) => {
     if (startPos != undefined) {
-      solidCube.rotate(event.x - startPos.x, event.y - startPos.y);
-      solidSphere.rotate(event.x - startPos.x, event.y - startPos.y);
+      solidCubes.forEach((solidCube) => {
+        solidCube.rotate(event.x - startPos.x, event.y - startPos.y);
+      });
       startPos.x = event.x;
       startPos.y = event.y;
     }
@@ -129,6 +132,9 @@ function setUpAttributesAndUniforms() {
     "uLightPosition"
   );
   ctx.uLightColorId = gl.getUniformLocation(ctx.shaderProgram, "uLightColor");
+
+  ctx.uCurrentTimeId = gl.getUniformLocation(ctx.shaderProgram, "uCurrentTime");
+  ctx.uScaleId = gl.getUniformLocation(ctx.shaderProgram, "uScale");
 }
 
 /**
@@ -136,17 +142,34 @@ function setUpAttributesAndUniforms() {
  */
 function setUpBuffers() {
   "use strict";
-  solidCube = SolidCube(
-    gl,
-    [1, 0, 0],
-    [0, 1, 0],
-    [0, 0, 1],
-    [1, 1, 0],
-    [1, 1, 1],
-    [0, 0, 0]
-  );
+  // solidCube = SolidCube(
+  //   gl,
+  //   [1, 0, 0],
+  //   [0, 1, 0],
+  //   [0, 0, 1],
+  //   [1, 1, 0],
+  //   [1, 1, 1],
+  //   [0, 0, 0]
+  // );
 
-  solidSphere = SolidSphere(gl, 5, 5, [1, 0, 0]);
+  for (let i = -4; i < 4; i += 2) {
+    for (let j = -4; j < 4; j += 2) {
+      let cube = SolidCube(
+        gl,
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1],
+        [1, 1, 0],
+        [1, 1, 1],
+        [0, 0, 0]
+      );
+      cube.position.x = i;
+      cube.position.y = j;
+      solidCubes.push(cube);
+    }
+  }
+
+  // solidSphere = SolidSphere(gl, 50, 50, [1, 0, 0]);
 }
 
 /**
@@ -175,22 +198,16 @@ function draw() {
   gl.uniformMatrix4fv(ctx.uProjectionMatId, false, projectionMatrix);
 
   //TODO : draw more stuff
-  setModelViewTransformations(solidCube, viewMatrix);
-  solidCube.draw(
-    gl,
-    ctx.aVertexPositionId,
-    ctx.aVertexColorId,
-    ctx.aVertexTextureCoordId,
-    ctx.aVertexNormalId
-  );
-  setModelViewTransformations(solidSphere, viewMatrix);
-
-  solidSphere.draw(
-    gl,
-    ctx.aVertexPositionId,
-    ctx.aVertexColorId,
-    ctx.aVertexNormalId
-  );
+  solidCubes.forEach((cube) => {
+    setModelViewTransformations(cube, viewMatrix);
+    cube.draw(
+      gl,
+      ctx.aVertexPositionId,
+      ctx.aVertexColorId,
+      ctx.aVertexTextureCoordId,
+      ctx.aVertexNormalId
+    );
+  });
 }
 
 // animation
@@ -211,8 +228,17 @@ function drawAnimated(timeStamp) {
     let lightX = Math.cos(timeStamp * speedMultiplier) * amplitude;
     let lightY = Math.sin(timeStamp * speedMultiplier) * amplitude;
     gl.uniform3fv(ctx.uLightPositionId, [lightX, lightY, -5]);
+    gl.uniform1f(ctx.uCurrentTimeId, Math.sin(Date.now() * 0.001));
 
-    // solidCube.angle += 0.5;
+    solidCubes.forEach((solidCube) => {
+      solidCube.scaleX(
+        Math.abs(Math.sin(Date.now() * 0.001)) + Math.random() * 0.001
+      );
+      solidCube.scaleY(Math.abs(Math.cos(Date.now() * 0.001)));
+      solidCube.scaleZ(Math.abs(Math.tan(Date.now() * 0.0001)));
+      solidCube.angle += 0.5;
+      gl.uniform1f(ctx.uScaleId, solidCube.width);
+    });
   }
   draw();
   window.requestAnimationFrame(drawAnimated);
